@@ -1,0 +1,28 @@
+main: me.dkim19375.backupwell.BackupWell
+name: BackupWell
+version: ${pluginVersion}
+description: Make a well to go to your previous location!
+author: dkim19375
+depend: [ PlaceholderAPI ]
+api-version: 1.16
+
+commands:
+  backupwell:
+    description: Main command
+    usage: Use /backupwell help for usage!
+    aliases:
+      - bwell
+
+permissions:
+  backupwell.all:
+    description: Have all permissions
+    children:
+      - backupwell.command
+      - backupwell.well
+      - backupwell.reload
+  backupwell.command:
+    description: Run the command
+  backupwell.well:
+    description: Create and remove wells
+  backupwell.reload:
+    description: Reload the plugin's files
