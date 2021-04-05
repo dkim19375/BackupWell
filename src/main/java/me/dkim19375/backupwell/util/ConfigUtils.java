@@ -11,9 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class ConfigUtils {
     public static void savePlayerDeath(BackupWell plugin, Player player) {
@@ -25,11 +23,16 @@ public class ConfigUtils {
 
     @Nullable
     public static PlayerDeathInformation getPlayerDeath(BackupWell plugin, Player player) {
+        return getPlayerDeath(plugin, player.getUniqueId());
+    }
+
+    @Nullable
+    public static PlayerDeathInformation getPlayerDeath(BackupWell plugin, UUID player) {
         final FileConfiguration fileConfiguration = plugin.getDeathsFile().getConfig();
-        final PlayerDeathInformation info = fileConfiguration.getSerializable("deaths." + player.getUniqueId().toString(), PlayerDeathInformation.class);
+        final PlayerDeathInformation info = fileConfiguration.getSerializable("deaths." + player.toString(), PlayerDeathInformation.class);
         if (info == null) {
-            if (fileConfiguration.contains("deaths." + player.getUniqueId().toString())) {
-                fileConfiguration.set("deaths." + player.getUniqueId(), null);
+            if (fileConfiguration.contains("deaths." + player.toString())) {
+                fileConfiguration.set("deaths." + player.toString(), null);
                 plugin.getDeathsFile().save();
             }
         }
@@ -119,5 +122,22 @@ public class ConfigUtils {
         if (save) {
             plugin.getWellsFile().save();
         }
+    }
+
+    @NotNull
+    public static Map<UUID, Instant> getUses(BackupWell plugin) {
+        final Map<UUID, Instant> map = new HashMap<>();
+        final ConfigurationSection section = plugin.getDeathsFile().getConfig().getConfigurationSection("uses");
+        if (section == null) {
+            return map;
+        }
+        for (String str : section.getKeys(false)) {
+            try {
+                final UUID uuid = UUID.fromString(str);
+                final Instant instant = Instant.ofEpochSecond(section.getLong(str));
+                map.put(uuid, instant);
+            } catch (IllegalArgumentException | NullPointerException ignored) {}
+        }
+        return map;
     }
 }

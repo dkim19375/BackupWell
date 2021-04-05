@@ -21,7 +21,6 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 public class PlayerMoveListener implements Listener {
     private final BackupWell plugin;
@@ -54,15 +53,19 @@ public class PlayerMoveListener implements Listener {
             }
             return;
         }
-        final Instant time = Instant.ofEpochSecond(plugin.getDeathsFile().getConfig().getLong("uses." + e.getPlayer().getUniqueId()));
-        if (TimeUtils.getDuration(Instant.now(), time, TimeUnit.SECONDS) < plugin.getConfig().getInt("cooldown")) {
-            e.getPlayer().sendMessage(format(e.getPlayer(), plugin.getConfig().getString("message-when-cooldown")).replace("%time%",
-                    TimeUtils.formatNumbers(plugin.getConfig().getInt("cooldown") - TimeUtils.getDuration(Instant.now(), time, TimeUnit.SECONDS))));
-            for (String s : plugin.getConfig().getStringList("commands-when-denied")) {
-                dispatchCommand(e.getPlayer(), s);
+        final long uses = plugin.getDeathsFile().getConfig().getLong("uses." + e.getPlayer().getUniqueId());
+        if (uses != 0) {
+            final Instant time = Instant.ofEpochSecond(uses);
+            if (TimeUtils.getTimeUntilExpires(time) != null) {
+                e.getPlayer().sendMessage(format(e.getPlayer(), plugin.getConfig().getString("message-when-cooldown")).replace("%time%",
+                        TimeUtils.formatNumbers(TimeUtils.getDurationUntilMidnight(Instant.now()).toSeconds())));
+                for (String s : plugin.getConfig().getStringList("commands-when-denied")) {
+                    dispatchCommand(e.getPlayer(), s);
+                }
+                return;
             }
-            return;
         }
+        // used
         e.getPlayer().teleport(info.getLocation());
         e.getPlayer().sendMessage(format(e.getPlayer(), plugin.getConfig().getString("message-when-use")));
         final FileConfiguration fileConfiguration = plugin.getDeathsFile().getConfig();
@@ -71,7 +74,6 @@ public class PlayerMoveListener implements Listener {
         plugin.getDeathsFile().save();
         final ConfigurationSection effects = plugin.getConfig().getConfigurationSection("effects");
         if (effects == null) {
-            System.out.println("null");
             return;
         }
         boolean save = false;
@@ -92,7 +94,6 @@ public class PlayerMoveListener implements Listener {
             final PotionEffect effect = new PotionEffect(type, effects.getInt(effectId + ".duration"), effects.getInt(effectId + ".amplifier") - 1);
             effectSet.add(effect);
         }
-        System.out.println("potions: " + effectSet);
         for (PotionEffect effect : effectSet) {
             e.getPlayer().addPotionEffect(effect);
         }

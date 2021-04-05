@@ -3,12 +3,14 @@ package me.dkim19375.backupwell.commands;
 import me.dkim19375.backupwell.BackupWell;
 import me.dkim19375.backupwell.util.ConfigUtils;
 import me.dkim19375.backupwell.util.Well;
+import me.dkim19375.dkim19375core.PlayerUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +25,7 @@ public class CommandHandler implements CommandExecutor {
     private final String MANY_ARGS = ChatColor.RED + "Too many arguments!";
     private final String MUST_BE_PLAYER = ChatColor.RED + "You must be a player!";
     private final String INVALID_ARGUMENT = ChatColor.RED + "Invalid argument!";
+    private final String NO_PERMISSION = ChatColor.RED + "You do not have permission to run this command!";
 
     public CommandHandler(BackupWell plugin) {
         this.plugin = plugin;
@@ -30,6 +33,10 @@ public class CommandHandler implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        if (!sender.hasPermission("backupwell.command")) {
+            sender.sendMessage(NO_PERMISSION);
+            return true;
+        }
         if (args.length < 1) {
             showHelp(sender, label);
             sender.sendMessage(LITTLE_ARGS);
@@ -44,11 +51,19 @@ public class CommandHandler implements CommandExecutor {
                 showHelp(sender, label);
                 return true;
             case "reload":
+                if (!sender.hasPermission("backupwell.reload")) {
+                    sender.sendMessage(NO_PERMISSION);
+                    return true;
+                }
                 sender.sendMessage(ChatColor.GOLD + "Reloading all configuration files");
                 plugin.reloadConfig();
                 sender.sendMessage(ChatColor.GREEN + "Successfully reloaded all configuration files!");
                 return true;
             case "list":
+                if (!sender.hasPermission("backupwell.list")) {
+                    sender.sendMessage(NO_PERMISSION);
+                    return true;
+                }
                 if (args.length > 1) {
                     showHelp(sender, label);
                     sender.sendMessage(MANY_ARGS);
@@ -69,6 +84,15 @@ public class CommandHandler implements CommandExecutor {
                 }
                 return true;
             case "well":
+                if (!sender.hasPermission("backupwell.well")) {
+                    sender.sendMessage(NO_PERMISSION);
+                    return true;
+                }
+                if (args.length < 2) {
+                    showHelp(sender, label);
+                    sender.sendMessage(MANY_ARGS);
+                    return true;
+                }
                 switch (args[1].toLowerCase()) {
                     case "create":
                         if (!(sender instanceof Player)) {
@@ -136,6 +160,27 @@ public class CommandHandler implements CommandExecutor {
                         sender.sendMessage(INVALID_ARGUMENT);
                         return true;
                 }
+            case "reset":
+                if (!sender.hasPermission("backupwell.reset")) {
+                    sender.sendMessage(NO_PERMISSION);
+                    return true;
+                }
+                if (args.length < 2) {
+                    showHelp(sender, label);
+                    sender.sendMessage(MANY_ARGS);
+                    return true;
+                }
+                final Player player = PlayerUtils.getFromAll(args[1]);
+                if (player == null) {
+                    showHelp(sender, label);
+                    sender.sendMessage(ChatColor.RED + "Invalid username/uuid!");
+                    return true;
+                }
+                final FileConfiguration fileConfiguration = plugin.getDeathsFile().getConfig();
+                fileConfiguration.set("uses." + player.getUniqueId().toString(), null);
+                plugin.getDeathsFile().save();
+                sender.sendMessage(ChatColor.GREEN + "Successfully reset!");
+                return true;
             default:
                 showHelp(sender, label);
                 sender.sendMessage(INVALID_ARGUMENT);
@@ -151,6 +196,7 @@ public class CommandHandler implements CommandExecutor {
         formatCMD(sender, label, "well remove", "Remove all wells in your current location");
         formatCMD(sender, label, "well remove <name>", "Remove wells by its name");
         formatCMD(sender, label, "list", "Get the list of wells");
+        formatCMD(sender, label, "reset <player>", "Reset the player's deaths and uses");
     }
 
     @Nullable

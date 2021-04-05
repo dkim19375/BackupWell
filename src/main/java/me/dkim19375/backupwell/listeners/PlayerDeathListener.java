@@ -4,13 +4,14 @@ import me.dkim19375.backupwell.BackupWell;
 import me.dkim19375.backupwell.util.ConfigUtils;
 import me.dkim19375.backupwell.util.PlayerDeathInformation;
 import me.dkim19375.backupwell.util.TimeUtils;
+import me.dkim19375.dkim19375core.NumberUtils;
 import me.dkim19375.dkim19375core.external.FormattingUtils;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
 import java.time.Instant;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 public class PlayerDeathListener implements Listener {
     private final BackupWell plugin;
@@ -23,17 +24,15 @@ public class PlayerDeathListener implements Listener {
     @EventHandler
     public void onPlayerDeathEvent(PlayerDeathEvent e) {
         ConfigUtils.savePlayerDeath(plugin, e.getEntity());
-        final String messageWhenDied = plugin.getConfig().getString("message-when-died");
-        if (messageWhenDied == null) {
-            return;
-        }
+        final List<String> messageWhenDied = plugin.getConfig().getStringList("messages-when-died");
         final PlayerDeathInformation info = ConfigUtils.getPlayerDeath(plugin, e.getEntity());
         if (info != null) {
             final Instant time = Instant.ofEpochSecond(plugin.getDeathsFile().getConfig().getLong("uses." + e.getEntity().getUniqueId()));
-            if (TimeUtils.getDuration(Instant.now(), time, TimeUnit.DAYS) < 1) {
+            if (TimeUtils.getTimeUntilExpires(time) != null) {
                 return;
             }
         }
-        e.getEntity().sendMessage(FormattingUtils.formatWithPAPIAndColors(e.getEntity(), messageWhenDied));
+        final int number = NumberUtils.getRandomNumber(0, messageWhenDied.size() - 1);
+        e.getEntity().sendMessage(FormattingUtils.formatWithPAPIAndColors(e.getEntity(), messageWhenDied.get(number)));
     }
 }

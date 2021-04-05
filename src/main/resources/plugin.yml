@@ -19,10 +19,15 @@ permissions:
     children:
       - backupwell.command
       - backupwell.well
+      - backupwell.list
       - backupwell.reload
   backupwell.command:
     description: Run the command
   backupwell.well:
     description: Create and remove wells
+  backupwell.list:
+    description: List wells
   backupwell.reload:
     description: Reload the plugin's files
+  backupwell.reset:
+    description: Reset a player's deaths and uses

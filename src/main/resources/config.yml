@@ -1,9 +1,11 @@
-message-when-died: '&aGo to the well to go back to where you died!'
-message-when-use: '&aYou have been teleported to where you died!'
+messages-when-died:
+  - '&aGo to the well to go back to where you died!'
+  - 'MESSAGE 2'
+  - 'MESSAGE 3'
+message-when-use: '&aWell Spirit: Good luck out there mortal, try to not die again...'
 message-when-cooldown: '&cYou have to wait %time% until you can use the well again!'
 message-when-no-death: '&cYou haven''t died recently!'
 
-cooldown: 86400 # This is one day
 commands-when-denied:
   - 'tp 70 71 30'
 
@@ -11,7 +13,7 @@ effects: # Effects that will occur when using the well
   '1': # Can be any name, but I don't know what to name it so I just did '1'
     type: DAMAGE_RESISTANCE # Full list in https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/potion/PotionEffectType.html#field.summary
     duration: 200 # Duration in ticks, so 200 ticks = 10 seconds
-    amplifier: 3 # Amplifier, must be over 1 and less than or equals to 255
+    amplifier: 3 # Amplifier, must be over 0 and less than or equals to 255
   '2':
     type: SPEED
     duration: 200
