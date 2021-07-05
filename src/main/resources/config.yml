@@ -8,6 +8,8 @@ message-when-no-death: '&cYou haven''t died recently!'
 
 commands-when-denied:
   - 'tp 70 71 30'
+direction: 90
+sound: 'ENTITY_ENDERMAN_TELEPORT'
 
 effects: # Effects that will occur when using the well
   '1': # Can be any name, but I don't know what to name it so I just did '1'

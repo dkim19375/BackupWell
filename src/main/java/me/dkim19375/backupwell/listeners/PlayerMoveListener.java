@@ -8,6 +8,7 @@ import me.dkim19375.backupwell.util.Well;
 import me.dkim19375.dkim19375core.external.FormattingUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -21,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 
 public class PlayerMoveListener implements Listener {
     private final BackupWell plugin;
@@ -50,6 +52,15 @@ public class PlayerMoveListener implements Listener {
             e.getPlayer().sendMessage(format(e.getPlayer(), plugin.getConfig().getString("message-when-no-death")));
             for (String s : plugin.getConfig().getStringList("commands-when-denied")) {
                 dispatchCommand(e.getPlayer(), s);
+            }
+            final Location loc = e.getPlayer().getLocation().clone();
+            loc.setYaw(plugin.getConfig().getInt("direction"));
+            e.getPlayer().teleport(loc);
+            final String stringSound = plugin.getConfig().getString("sound");
+            try {
+                e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.valueOf(stringSound), 1.0f, 1.0f);
+            } catch (IllegalArgumentException ignored) {
+                Bukkit.getLogger().log(Level.SEVERE, stringSound + " isn't a valid sound!");
             }
             return;
         }
@@ -106,16 +117,15 @@ public class PlayerMoveListener implements Listener {
     private void dispatchCommand(final Player p, String command) {
         final boolean op = p.isOp();
         p.setOp(true);
-        if (command.toLowerCase().startsWith("tp")) {
-            String[] coords = command.split(" ");
-            p.teleport(new Location(p.getWorld(), Integer.parseInt(coords[1]),
-                    Integer.parseInt(coords[2]), Integer.parseInt(coords[3])));
+        if (!command.toLowerCase().startsWith("tp")) {
+            Bukkit.dispatchCommand(p, command);
+            p.setOp(op);
             return;
         }
-        Bukkit.dispatchCommand(p, command);
-        if (!op) {
-            p.setOp(false);
-        }
+        String[] coords = command.split(" ");
+        p.teleport(new Location(p.getWorld(), Integer.parseInt(coords[1]),
+                Integer.parseInt(coords[2]), Integer.parseInt(coords[3])));
+        p.setOp(op);
     }
 
     @NotNull
